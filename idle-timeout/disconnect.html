@@ -1,0 +1,100 @@
+<html>
+  <head>
+    <title>Idle</title>
+    <script type="text/javascript">
+      
+      // domain relaxing (in order to communicate with the main portal page)
+      //@see http://help.sap.com/saphelp_nw04s/helpdata/EN/28/7c383f717b5f03e10000000a114084/frameset.htm
+      var liBehindFirstDot = location.hostname.indexOf( "." ) + 1;
+      if (liBehindFirstDot > 0) {
+        document.domain = location.hostname.substr( liBehindFirstDot );
+      }
+      
+      var start_time = new Date();
+      var max_time = 1000 * 60 * 10; // 10 minutes
+      var is_ok_pushed = false;
+      
+      /**
+      * Keeps the session alive
+      **/
+      function keepalive() {
+        is_ok_pushed = true;
+        
+        // 1 - reload the portal
+        if(window.opener && !window.opener.closed) {
+          try {
+            window.opener.timeout_h.stayAlive();
+          } catch(e) {}
+        }
+        
+        // 2 - close the popup
+        window.close();
+      }
+      
+      /**
+      * Disconnects from the portal then closes this popup
+      **/
+      function disconnect() {
+        // 1 - disconnect from the portal
+        if(window.opener && !window.opener.closed) {
+          try {
+            window.opener.logoff();
+          } catch(e) {}
+        }
+        
+        // 2 - close the popup
+        window.close();
+      }
+      
+      /**
+      * Refreshes the time left
+      **/
+      function refreshTimeLeft() {
+        var span = document.getElementById('time_left');
+        var now = new Date();
+        var totalTimeLeft = max_time - ( now.getTime() - start_time.getTime() );
+        var timeLeft;
+        if (totalTimeLeft > 60 * 1000) {
+          // if time left > 1 minute
+          timeLeft = Math.ceil( totalTimeLeft / (60 * 1000) ); // in minutes
+          span.innerHTML = timeLeft+' minutes';
+          if(!is_ok_pushed) window.setTimeout(refreshTimeLeft, 5 * 1000);
+        } else if (totalTimeLeft <= 0) {
+          // if time left
+          disconnect();
+        } else {
+          // if time left <= 1 minute
+          timeLeft = Math.ceil( totalTimeLeft / (1 * 1000) ); // in seconds
+          span.innerHTML = timeLeft+' seconds';
+          span.style.fontWeight = 'bold';
+          if(!is_ok_pushed) window.setTimeout(refreshTimeLeft, 1 * 1000);
+        }
+      }
+      
+      window.onload = function() {
+        refreshTimeLeft();
+      }
+      
+      window.onunload = function() {
+        keepalive();
+      }
+      
+    </script>
+    <!-- CSS here -->
+  </head>
+  <body id="popup">
+    <h1>Warning</h1>
+    <div id="content">
+      <p>Your session is idle ; you will be disconnected in <span id="time_left">10 minutes</span>.</p>
+      <p>Unless you click on the "OK" button during the remaining time.</p>
+      <div style="text-align:center; margin-bottom:20px">
+        <a href="javascript:keepalive()" class="button" style="padding:1px 40px; float:none; display:inline">OK</a>
+      </div>
+    </div>
+  </body>
+  <body>
+    <p id="message"></p>
+    <form>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+h1. *SAP EP snippets*
+
+p. Snippets for SAP Enterprise Portal
+
+h2. Contributors
+
+* "arnaud":http://github.com/arnaud (author)
